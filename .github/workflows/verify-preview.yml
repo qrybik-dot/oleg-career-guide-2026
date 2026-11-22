@@ -1,0 +1,24 @@
+name: Verify public HTML access
+on:
+  push:
+    paths: ['.github/workflows/verify-preview.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check hosted HTML endpoints
+        shell: bash
+        run: |
+          set -e
+          for url in 'https://raw.githack.com/qrybik-dot/oleg-career-guide-2026/main/index.html' 'https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/f3333997df85487d0c151a31e1ed0943c580376b/index.html'; do
+            echo "Checking $url"
+            curl --retry 2 --retry-delay 2 -LsS -D /tmp/headers -o /tmp/site "$url"
+            grep -iE '^HTTP/|^content-type:' /tmp/headers | tail -5
+            wc -c /tmp/site
+            grep -q 'Олег, твой' /tmp/site
+            grep -q 'Полные инструкции проекта' /tmp/site
+            echo 'SITE CONTENT VERIFIED'
+          done
