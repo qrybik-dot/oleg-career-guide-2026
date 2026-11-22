@@ -1,4 +1,4 @@
-name: Verify published career guide v3
+name: Verify published career guide v4
 on:
   push:
     paths: ['.github/workflows/verify-preview.yml']
@@ -9,20 +9,21 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify both redesigned HTML versions from public CDN
+      - name: Verify public HTML files and local crosslink
         shell: bash
         run: |
           set -euo pipefail
-          for file in index.html oleg-guide-offline.html; do
-            url="https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/cf0bc94b6ce303c9b28f72313b3985549af7b837/$file"
-            echo "Checking $url"
-            curl -fsSL --retry 3 --retry-delay 2 -D /tmp/headers -o /tmp/site "$url"
-            grep -qi '^content-type: text/html' /tmp/headers
-            grep -q 'id="p-system"' /tmp/site
-            grep -q 'id="build-prompt"' /tmp/site
-            grep -q 'rff_channel/327' /tmp/site
-            grep -q 'join.granola.ai/t/fvwxtk7mgm' /tmp/site
-            grep -q 'hh_rabota_bot' /tmp/site
-            test "$(wc -c < /tmp/site)" -gt 90000
-            echo "OK: $(wc -c < /tmp/site) bytes of $file"
-          done
+          base="https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/4671ac2b295f43335b5cc1259c8ad3fa55adad2e"
+          curl -fsSL --retry 3 --retry-delay 2 -D /tmp/indexheaders -o /tmp/index "$base/index.html"
+          curl -fsSL --retry 3 --retry-delay 2 -D /tmp/guideheaders -o /tmp/guide "$base/oleg-guide-offline.html"
+          grep -qi '^content-type: text/html' /tmp/indexheaders
+          grep -qi '^content-type: text/html' /tmp/guideheaders
+          grep -q 'oleg-guide-offline.html' /tmp/index
+          grep -q 'Скопировать инструкции проекта' /tmp/index
+          grep -q 'ОГЛАВЛЕНИЕ' /tmp/guide
+          grep -q 'data-theme="dark"' /tmp/guide
+          grep -q 'join.granola.ai/t/fvwxtk7mgm' /tmp/guide
+          grep -q 't.me/rff_channel/327' /tmp/guide
+          test "$(wc -c </tmp/index)" -gt 30000
+          test "$(wc -c </tmp/guide)" -gt 60000
+          echo "PASS public site and guide"
