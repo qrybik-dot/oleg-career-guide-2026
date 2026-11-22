@@ -1,4 +1,4 @@
-name: Verify published career guide v4
+name: Verify rebuilt Oleg career guides
 on:
   push:
     paths: ['.github/workflows/verify-preview.yml']
@@ -9,21 +9,23 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify public HTML files and local crosslink
+      - name: Check live static HTML files
         shell: bash
         run: |
           set -euo pipefail
-          base="https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/4671ac2b295f43335b5cc1259c8ad3fa55adad2e"
-          curl -fsSL --retry 3 --retry-delay 2 -D /tmp/indexheaders -o /tmp/index "$base/index.html"
-          curl -fsSL --retry 3 --retry-delay 2 -D /tmp/guideheaders -o /tmp/guide "$base/oleg-guide-offline.html"
-          grep -qi '^content-type: text/html' /tmp/indexheaders
-          grep -qi '^content-type: text/html' /tmp/guideheaders
-          grep -q 'oleg-guide-offline.html' /tmp/index
-          grep -q 'Скопировать инструкции проекта' /tmp/index
+          base="https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/5bcb06c7dc26abc00e7a26f72297ca08cd6115af"
+          curl -fsSL --retry 3 --retry-delay 2 -D /tmp/siteh -o /tmp/site "$base/index.html"
+          curl -fsSL --retry 3 --retry-delay 2 -D /tmp/guideh -o /tmp/guide "$base/oleg-guide-offline.html"
+          grep -qi '^content-type: text/html' /tmp/siteh
+          grep -qi '^content-type: text/html' /tmp/guideh
+          grep -q 'Олег, твой' /tmp/site
+          grep -q 'oleg-guide-offline.html' /tmp/site
+          grep -q 'data-copy="p-system"' /tmp/site
           grep -q 'ОГЛАВЛЕНИЕ' /tmp/guide
-          grep -q 'data-theme="dark"' /tmp/guide
+          grep -q 'data-copy="p-daily"' /tmp/guide
           grep -q 'join.granola.ai/t/fvwxtk7mgm' /tmp/guide
           grep -q 't.me/rff_channel/327' /tmp/guide
-          test "$(wc -c </tmp/index)" -gt 30000
-          test "$(wc -c </tmp/guide)" -gt 60000
-          echo "PASS public site and guide"
+          test "$(wc -c < /tmp/site)" -gt 60000
+          test "$(wc -c < /tmp/guide)" -gt 60000
+          echo "PUBLIC SITE VERIFIED $(wc -c < /tmp/site) bytes"
+          echo "PUBLIC GUIDE VERIFIED $(wc -c < /tmp/guide) bytes"
