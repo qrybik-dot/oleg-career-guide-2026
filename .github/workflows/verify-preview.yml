@@ -1,4 +1,4 @@
-name: Verify public HTML access
+name: Verify published career guide
 on:
   push:
     paths: ['.github/workflows/verify-preview.yml']
@@ -9,16 +9,17 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check hosted HTML endpoints
+      - name: Verify public static HTML
         shell: bash
         run: |
-          set -e
-          for url in 'https://raw.githack.com/qrybik-dot/oleg-career-guide-2026/main/index.html' 'https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/f3333997df85487d0c151a31e1ed0943c580376b/index.html'; do
+          set -euo pipefail
+          for file in index.html oleg-guide-offline.html; do
+            url="https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/df1a3bdd4c5421110a0c00eece6feab6efd8bd66/$file"
             echo "Checking $url"
-            curl --retry 2 --retry-delay 2 -LsS -D /tmp/headers -o /tmp/site "$url"
-            grep -iE '^HTTP/|^content-type:' /tmp/headers | tail -5
-            wc -c /tmp/site
-            grep -q 'Олег, твой' /tmp/site
+            curl -fsSL --retry 3 --retry-delay 2 -D /tmp/headers -o /tmp/site "$url"
+            grep -qi '^content-type: text/html' /tmp/headers
+            grep -q 'prompt-system' /tmp/site
             grep -q 'Скопировать' /tmp/site
-            echo 'SITE CONTENT VERIFIED'
+            grep -q 'Олег, привет!' /tmp/site
+            echo "OK: $(wc -c < /tmp/site) bytes of $file"
           done
