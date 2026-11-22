@@ -19,6 +19,6 @@ jobs:
             grep -iE '^HTTP/|^content-type:' /tmp/headers | tail -5
             wc -c /tmp/site
             grep -q 'Олег, твой' /tmp/site
-            grep -q 'Полные инструкции проекта' /tmp/site
+            grep -q 'Скопировать' /tmp/site
             echo 'SITE CONTENT VERIFIED'
           done
