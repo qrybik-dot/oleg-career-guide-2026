@@ -1,4 +1,4 @@
-name: Verify published career guide
+name: Verify published career guide v3
 on:
   push:
     paths: ['.github/workflows/verify-preview.yml']
@@ -9,17 +9,20 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify public static HTML
+      - name: Verify both redesigned HTML versions from public CDN
         shell: bash
         run: |
           set -euo pipefail
           for file in index.html oleg-guide-offline.html; do
-            url="https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/df1a3bdd4c5421110a0c00eece6feab6efd8bd66/$file"
+            url="https://rawcdn.githack.com/qrybik-dot/oleg-career-guide-2026/cf0bc94b6ce303c9b28f72313b3985549af7b837/$file"
             echo "Checking $url"
             curl -fsSL --retry 3 --retry-delay 2 -D /tmp/headers -o /tmp/site "$url"
             grep -qi '^content-type: text/html' /tmp/headers
-            grep -q 'prompt-system' /tmp/site
-            grep -q 'Скопировать' /tmp/site
-            grep -q 'Олег, привет!' /tmp/site
+            grep -q 'id="p-system"' /tmp/site
+            grep -q 'id="build-prompt"' /tmp/site
+            grep -q 'rff_channel/327' /tmp/site
+            grep -q 'join.granola.ai/t/fvwxtk7mgm' /tmp/site
+            grep -q 'hh_rabota_bot' /tmp/site
+            test "$(wc -c < /tmp/site)" -gt 90000
             echo "OK: $(wc -c < /tmp/site) bytes of $file"
           done
